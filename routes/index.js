@@ -1,32 +1,41 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+var cors = require('cors')
 const registry = require("./registry.json");
 const fs = require("fs");
+const { reset } = require("nodemon");
 
-router.all("/servicio/*", (req, res) => {
+router.all("/servicio/*",cors(), (req, res) => {
     
     const myArray = (req.params)['0'].split("/");
     if (registry.services[myArray[0]]) {
-    
-    const { host, port, protocol } = registry.services[myArray[1]][0];
+      
+    const { host, port, protocol } = registry.services[myArray[0]][0];
     let url = `${protocol}://${host}:${port}`;
     
     for (let index = 1; index < myArray.length; index++) {
       url=url+(`/${myArray[index]}`);
     }
 
-    
+    console.log(req.method+" aqui "+url+ " ")
+
+    console.log({...req.headers})
+  
     axios({
       method: req.method,
       url: url,
-      headers: req.headers,
       data: req.body
     }).then(async(response) => {
       let result= await response;
      
       res.json(result.data);
-    });
+    }).catch(
+      function (error) {
+        res.json(error)
+
+      }
+    )
     }else{
       res.json({'mensaje':'no se pudo'})
     }
